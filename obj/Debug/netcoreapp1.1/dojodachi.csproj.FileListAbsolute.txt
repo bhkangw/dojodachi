@@ -1,0 +1,9 @@
+/Users/bkila/Desktop/dojodachi/bin/Debug/netcoreapp1.1/dojodachi.deps.json
+/Users/bkila/Desktop/dojodachi/bin/Debug/netcoreapp1.1/dojodachi.runtimeconfig.json
+/Users/bkila/Desktop/dojodachi/bin/Debug/netcoreapp1.1/dojodachi.runtimeconfig.dev.json
+/Users/bkila/Desktop/dojodachi/bin/Debug/netcoreapp1.1/dojodachi.dll
+/Users/bkila/Desktop/dojodachi/bin/Debug/netcoreapp1.1/dojodachi.pdb
+/Users/bkila/Desktop/dojodachi/obj/Debug/netcoreapp1.1/dojodachi.csproj.CoreCompileInputs.cache
+/Users/bkila/Desktop/dojodachi/obj/Debug/netcoreapp1.1/dojodachi.AssemblyInfo.cs
+/Users/bkila/Desktop/dojodachi/obj/Debug/netcoreapp1.1/dojodachi.dll
+/Users/bkila/Desktop/dojodachi/obj/Debug/netcoreapp1.1/dojodachi.pdb
