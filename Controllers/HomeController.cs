@@ -4,8 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
-namespace firstAsp.Controllers
+namespace dojodachi.Controllers
 {
     public class HomeController : Controller
     {
@@ -13,30 +14,21 @@ namespace firstAsp.Controllers
         [Route("")]
         public IActionResult Index()
         {
-            int? fullness = HttpContext.Session.GetInt32("fullness");
-            int? happiness = HttpContext.Session.GetInt32("happiness");
-            int? meals = HttpContext.Session.GetInt32("meals");
-            int? energy = HttpContext.Session.GetInt32("energy");
-            if(fullness == null && happiness == null && meals == null && fullness == null && energy == null)
+            if(HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi") == null)
             {
-                HttpContext.Session.SetInt32("fullness", 20);
-                HttpContext.Session.SetInt32("happiness", 20);
-                HttpContext.Session.SetInt32("meals", 3);
-                HttpContext.Session.SetInt32("energy", 50);
+                HttpContext.Session.SetObjectAsJson("Dojodachi", new DojodachiInfo());
             }
-            ViewBag.fullness = HttpContext.Session.GetInt32("fullness");
-            ViewBag.happiness = HttpContext.Session.GetInt32("happiness");
-            ViewBag.meals = HttpContext.Session.GetInt32("meals");
-            ViewBag.energy = HttpContext.Session.GetInt32("energy");
 
-            if(fullness > 99 && happiness > 99 && energy > 99){
-                TempData["action"] = "Congratulations! You won!";
-            }
-            
-            if(fullness < 1 || happiness < 1){
-                TempData["action"] = "O no! Your dojodachi is ded";
-            }
-            ViewBag.action = TempData["action"];
+            ViewBag.Dojodachi = HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi");
+            ViewBag.Message = "You got a new Dojodachi!";
+            ViewBag.GameStatus = "running";
+            ViewBag.Reaction = "";
+
+            if (ViewBag.Dojodachi.fullness > 99 && ViewBag.Dojodachi.happiness > 99 && ViewBag.Dojodachi.energy > 99)
+                {
+                    ViewBag.Message = "Congratulations! You won!";
+                }
+
             return View();
         }
 
@@ -44,133 +36,103 @@ namespace firstAsp.Controllers
         [Route("feed")]
         public IActionResult Feed()
         {
-            int? fullness = HttpContext.Session.GetInt32("fullness");
-            int? happiness = HttpContext.Session.GetInt32("happiness");
-            int? meals = HttpContext.Session.GetInt32("meals");
-            int? energy = HttpContext.Session.GetInt32("energy");
-            if (fullness == null && happiness == null && meals == null && fullness == null && energy == null)
-            {
-                fullness = 20;
-                happiness = 20;
-                meals = 3;
-                energy = 50;
-            }
+            DojodachiInfo EditDachi = HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi");
             Random random = new Random();
+            ViewBag.GameStatus = "running";
             int fullnessAmount = random.Next(5, 11);
             int chance = random.Next(1,5);
-            if(chance == 1)
+            if(EditDachi.meals > 0)
             {
-                if (meals > 0)
+                EditDachi.meals--;
+                if (chance == 1)
                 {
-                    meals--;
-                    TempData["action"] = $"You fed your Dojodachi! But he didn't like it. Fullness +0, Meals -1";
+                    ViewBag.Reaction = ":(";
+                    ViewBag.Message = "You fed your Dojodachi! But he didn't like it. Fullness +0, Meals -1";
+                }
+                else
+                {
+                    EditDachi.fullness += fullnessAmount;
+                    ViewBag.Reaction = ":)";
+                    ViewBag.Message = $"You fed your Dojodachi! Fullness +{fullnessAmount}, Meals -1";
                 }
             }
-            else
-            {
-                if (meals > 0)
-                {
-                    meals--;
-                    fullness = fullness + fullnessAmount;
-                    TempData["action"] = $"You fed your Dojodachi! Fullness +{fullnessAmount}, Meals -1";
-                }
-            }
-            HttpContext.Session.SetInt32("fullness", (int)fullness);
-            HttpContext.Session.SetInt32("meals", (int)meals);
-            return RedirectToAction("Index");
+            HttpContext.Session.SetObjectAsJson("Dojodachi", EditDachi);
+            ViewBag.Dojodachi = EditDachi;
+            return View("Index");
         }
 
         [HttpGetAttribute]
         [Route("play")]
         public IActionResult Play()
         {
-            int? fullness = HttpContext.Session.GetInt32("fullness");
-            int? happiness = HttpContext.Session.GetInt32("happiness");
-            int? meals = HttpContext.Session.GetInt32("meals");
-            int? energy = HttpContext.Session.GetInt32("energy");
-            if (fullness == null && happiness == null && meals == null && fullness == null && energy == null)
-            {
-                fullness = 20;
-                happiness = 20;
-                meals = 3;
-                energy = 50;
-            }
+            DojodachiInfo EditDachi = HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi");
             Random random = new Random();
+            ViewBag.GameStatus = "running";
             int happinessAmount = random.Next(5, 11);
             int chance = random.Next(1, 5);
-            if (chance == 1)
+            
+            if(EditDachi.energy > 4)
             {
-                if (energy >= 5)
+                EditDachi.energy -= 5;
+                if(chance == 1)
                 {
-                    energy -= 5;
-                    TempData["action"] = $"You played with your Dojodachi! But he didn't like it. Happiness +0, Energy -5";
+                    ViewBag.Reaction = ":(";
+                    ViewBag.Message = "You played with your Dojodachi! But he didn't like it. Happiness +0, Energy -5";
+                }
+                else
+                {
+                    EditDachi.happiness += happinessAmount;
+                    ViewBag.Reaction = ":)";
+                    ViewBag.Message = $"You played with your Dojodachi! Happiness +{happinessAmount}, Energy -5";
                 }
             }
-            else
-            {
-                if (energy >= 5)
-                {
-                    energy -= 5;
-                    happiness = happiness + happinessAmount;
-                    TempData["action"] = $"You played with your Dojodachi! Happiness +{happinessAmount}, Energy -5";
-                }
-            }
-            HttpContext.Session.SetInt32("happiness", (int)happiness);
-            HttpContext.Session.SetInt32("energy", (int)energy);
-            return RedirectToAction("Index");
+            HttpContext.Session.SetObjectAsJson("Dojodachi", EditDachi);
+            ViewBag.Dojodachi = EditDachi;
+            return View("Index");
         }
 
         [HttpGetAttribute]
         [Route("work")]
         public IActionResult Work()
         {
-            int? fullness = HttpContext.Session.GetInt32("fullness");
-            int? happiness = HttpContext.Session.GetInt32("happiness");
-            int? meals = HttpContext.Session.GetInt32("meals");
-            int? energy = HttpContext.Session.GetInt32("energy");
-            if (fullness == null && happiness == null && meals == null && fullness == null && energy == null)
-            {
-                fullness = 20;
-                happiness = 20;
-                meals = 3;
-                energy = 50;
-            }
+            DojodachiInfo EditDachi = HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi");
             Random random = new Random();
+            ViewBag.GameStatus = "running";
             int mealsAmount = random.Next(1, 4);
-            if (energy >= 5)
+            int chance = random.Next(1, 5);
+            
+            if(EditDachi.energy > 4)
             {
-                energy -= 5;
-                meals = meals + mealsAmount;
+                EditDachi.energy -= 5;
+                EditDachi.meals += mealsAmount;
+                ViewBag.Reaction = ":)";
+                ViewBag.Message = $"You sent your Dojodachi to work! Meals +{mealsAmount}, Energy -5";
             }
-            HttpContext.Session.SetInt32("meals", (int)meals);
-            HttpContext.Session.SetInt32("energy", (int)energy);
-            TempData["action"] = $"You sent your Dojodachi to work! Meals +{mealsAmount}, Energy -5";
-            return RedirectToAction("Index");
+            HttpContext.Session.SetObjectAsJson("Dojodachi", EditDachi);
+            ViewBag.Dojodachi = EditDachi;
+            return View("Index");
         }
 
         [HttpGetAttribute]
         [Route("sleep")]
         public IActionResult Sleep()
         {
-            int? fullness = HttpContext.Session.GetInt32("fullness");
-            int? happiness = HttpContext.Session.GetInt32("happiness");
-            int? meals = HttpContext.Session.GetInt32("meals");
-            int? energy = HttpContext.Session.GetInt32("energy");
-            if (fullness == null && happiness == null && meals == null && fullness == null && energy == null)
+            DojodachiInfo EditDachi = HttpContext.Session.GetObjectFromJson<DojodachiInfo>("Dojodachi");
+            Random random = new Random();
+            EditDachi.fullness -= 5;
+            EditDachi.happiness -= 5;
+            EditDachi.energy += 15;
+            ViewBag.GameStatus = "running";
+            ViewBag.Reaction = ":)";
+            ViewBag.Message = "Your Dojodachi is sleeping! Energy +15, Happiness -5, Fullness -5";
+            
+            HttpContext.Session.SetObjectAsJson("Dojodachi", EditDachi);
+            ViewBag.Dojodachi = EditDachi;
+            if (ViewBag.Dojodachi.fullness < 1 || ViewBag.Dojodachi.happiness < 1)
             {
-                fullness = 20;
-                happiness = 20;
-                meals = 3;
-                energy = 50;
+                ViewBag.Message = "O no! Your dojodachi is ded";
             }
-            fullness -= 5;
-            happiness -= 5;
-            energy += 15;
-            HttpContext.Session.SetInt32("fullness", (int)fullness);
-            HttpContext.Session.SetInt32("happiness", (int)happiness);
-            HttpContext.Session.SetInt32("energy", (int)energy);
-            TempData["action"] = $"Your Dojodachi is sleeping! Energy +15, Happiness -5, Fullness -5";
-            return RedirectToAction("Index");
+            return View("Index");
         }
 
         [HttpGetAttribute]
@@ -179,6 +141,18 @@ namespace firstAsp.Controllers
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index"); 
+        }
+    }
+    public static class SessionExtensions
+    {
+        public static void SetObjectAsJson(this ISession session, string key, object value)
+        {
+            session.SetString(key, JsonConvert.SerializeObject(value));
+        }
+        public static T GetObjectFromJson<T>(this ISession session, string key)
+        {
+            var value = session.GetString(key);
+            return value == null ? default(T) : JsonConvert.DeserializeObject<T>(value);
         }
     }
 }
